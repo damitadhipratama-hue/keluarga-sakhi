@@ -39,7 +39,7 @@ const menuData: Record<string, MenuItem[]> = {
   Perusahaan: [
     { label: "Form Response", href: "/perusahaan/form_response" },
     { label: "Maintenance", href: "/perusahaan/maintenance" },
-    { label: "Dashboard", href: "/perusahaan/dashboard" },
+    { label: "Dashboard e", href: "/perusahaan/dashboard" },
   ],
 };
 
