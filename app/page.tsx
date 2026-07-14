@@ -10,7 +10,7 @@ export default function HomePage() {
       
       {/* Welcome Text */}
       <h1 className="text-3xl md:text-4xl font-extrabold tracking-tighter text-white mb-4">
-        Selamat Datang di <span className="bg-gradient-to-r from-[#00F0FF] to-[#0066FF] bg-clip-text text-transparent drop-shadow-sm">TERIOT V.1</span>
+        Selamat Datang di <span className="bg-gradient-to-r from-[#00F0FF] to-[#0066FF] bg-clip-text text-transparent drop-shadow-sm">KELUARGA SAKHI</span>
       </h1>
       
       <p className="text-zinc-400 max-w-md mx-auto text-sm md:text-base leading-relaxed mb-8">

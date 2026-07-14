@@ -317,7 +317,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="w-full max-w-md bg-[#09090b]/80 backdrop-blur-xl border border-white/[0.08] p-6 sm:p-8 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] z-10">
               <div className="text-center mb-8">
                 <h1 className="text-xl sm:text-2xl font-extrabold tracking-tighter bg-gradient-to-r from-[#00F0FF] to-[#0066FF] bg-clip-text text-transparent drop-shadow-sm mb-2">
-                  TERIOT MARK V.1
+                  KELUARGA SAKHI
                 </h1>
                 <p className="text-xs sm:text-sm text-zinc-400">Silakan masuk untuk mengakses sistem.</p>
               </div>
