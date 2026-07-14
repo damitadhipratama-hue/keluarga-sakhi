@@ -32,8 +32,7 @@ const menuData: Record<string, MenuItem[]> = {
     { label: "Form Response", href: "/keluarga/form_response" },
     { label: "Summary View", href: "/keluarga/summary" },
     { label: "Dashboard Chart", href: "/keluarga/dashboard" },
-    { label: "Form Tutup Buku", href: "/keluarga/form_tutup_buku" },
-    { label: "Laporan Tutup Buku", href: "/keluarga/accounting_report" },
+    { label: "Laporan Tutup Buku", href: "/keluarga/form_tutup_buku" },
     { label: "Maintenance", href: "/keluarga/maintenance" },
   ],
   Perusahaan: [

@@ -26,11 +26,18 @@ export default function KeluargaFormPage() {
 
   const [masterCategories, setMasterCategories] = useState<string[]>([]);
 
+  // 1 & 2. State Filter Date Global (Default: Bulan & Tahun Hari Ini)
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().substring(0, 7); // Hasil: "YYYY-MM"
+  });
+
   // State Manajemen Pagination (Limit 20 baris per halaman)
   const ITEMS_PER_PAGE = 20;
   const [currentPagePengeluaran, setCurrentPagePengeluaran] = useState<number>(1);
   const [currentPagePemasukan, setCurrentPagePemasukan] = useState<number>(1);
 
+  // State untuk Form Modal Internal
   const [tanggal, setTanggal] = useState<string>(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -166,25 +173,23 @@ export default function KeluargaFormPage() {
     }).format(num);
   };
 
-  const formatTimestamp = (ts?: string) => {
-    if (!ts) return "-";
-    const date = new Date(ts);
-    return date.toLocaleString("id-ID", { hour12: false });
-  };
+  // 3. Filter data berdasarkan Bulan yang dipilih (Selected Date Filter)
+  const filteredDataByMonth = data.filter((item) => item.tanggal.startsWith(selectedMonth));
 
-  const dataPemasukan = data
+  const dataPemasukan = filteredDataByMonth
     .filter((item) => ["gaji", "dividen"].includes(item.kategori.toLowerCase()))
     .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
-  const dataPengeluaran = data
+  const dataPengeluaran = filteredDataByMonth
     .filter((item) => !["gaji", "dividen"].includes(item.kategori.toLowerCase()))
     .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
   const renderTable = (items: FormSummaryItem[], type: "pemasukan" | "pengeluaran") => {
     const isPemasukan = type === "pemasukan";
+    
+    // Jumlah kumulasi otomatis menyesuaikan item yang sudah difilter berdasarkan bulan terpilih
     const totalJumlah = items.reduce((sum, item) => sum + Number(item.jumlah || 0), 0);
     
-    // Perhitungan Segmentasi Halaman Berdasarkan Tipe
     const currentPage = isPemasukan ? currentPagePemasukan : currentPagePengeluaran;
     const setCurrentPage = isPemasukan ? setCurrentPagePemasukan : setCurrentPagePengeluaran;
     
@@ -194,7 +199,6 @@ export default function KeluargaFormPage() {
 
     return (
       <div className="bg-[#1a1a1a] rounded-lg overflow-hidden border border-zinc-800 shadow-xl w-full">
-        {/* Table Header Section */}
         <div className="p-4 border-b border-zinc-800 bg-[#1f1f1f] flex items-center justify-between">
           <div className="flex items-center gap-2">
             {isPemasukan ? (
@@ -216,27 +220,23 @@ export default function KeluargaFormPage() {
           </div>
         </div>
 
-        {/* Wrapper Scrollable Mobile */}
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800">
           <table className="w-full min-w-[850px] border-collapse text-left text-xs text-zinc-300">
-            {/* Table Head */}
             <thead>
               <tr className="bg-[#151515] border-b border-zinc-800 text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[18%]">Waktu Entri</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[12%] text-center">Tanggal Dok.</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[18%] text-right">Kategori</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[25%]">Keterangan / Memo</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[15%] text-right">Nilai Nominal (IDR)</th>
+                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[15%] text-center">Tanggal Dok.</th>
+                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[20%] text-right">Kategori</th>
+                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[35%]">Keterangan / Memo</th>
+                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[18%] text-right">Nilai Nominal (IDR)</th>
                 <th className="py-3 px-4 font-medium w-[12%] text-center">Aksi</th>
               </tr>
             </thead>
 
-            {/* Table Body */}
             <tbody>
               {displayedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-xs text-zinc-500 bg-[#1a1a1a]">
-                    Belum terdapat catatan transaksi posting pada pos {type}.
+                  <td colSpan={5} className="py-8 text-center text-xs text-zinc-500 bg-[#1a1a1a]">
+                    Belum terdapat catatan transaksi posting pada pos {type} di bulan ini.
                   </td>
                 </tr>
               ) : (
@@ -245,9 +245,6 @@ export default function KeluargaFormPage() {
                     key={item.id || index}
                     className="border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors duration-150"
                   >
-                    <td className="py-2.5 px-4 font-mono text-zinc-500 border-r border-zinc-800/30 whitespace-nowrap">
-                      {formatTimestamp(item.timestamp)}
-                    </td>
                     <td className="py-2.5 px-4 font-mono text-center border-r border-zinc-800/30 whitespace-nowrap">
                       {item.tanggal}
                     </td>
@@ -281,12 +278,11 @@ export default function KeluargaFormPage() {
               )}
             </tbody>
 
-            {/* Table Footer Ledger */}
             {items.length > 0 && (
               <tfoot>
                 <tr className="bg-[#151515] font-bold text-zinc-200 border-t border-zinc-800">
-                  <td colSpan={4} className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30">
-                    Total Saldo Buku Pos {type} (Kumulatif)
+                  <td colSpan={3} className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30">
+                    Total Saldo Buku Pos {type} (Bulan Terpilih)
                   </td>
                   <td className={`py-3 px-4 font-mono text-sm text-right border-r border-zinc-800/30 ${isPemasukan ? "text-emerald-500" : "text-rose-500"}`}>
                     {formatRupiah(totalJumlah)}
@@ -298,7 +294,6 @@ export default function KeluargaFormPage() {
           </table>
         </div>
 
-        {/* Jendela Sistem Navigasi Pagination */}
         {items.length > ITEMS_PER_PAGE && (
           <div className="p-3 bg-[#151515] border-t border-zinc-800 flex items-center justify-between gap-4">
             <span className="text-[11px] text-zinc-500 font-mono">
@@ -350,19 +345,38 @@ export default function KeluargaFormPage() {
       <div className="w-full space-y-6 max-w-7xl mx-auto">
         
         {/* Header & Button Actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-zinc-800 pb-4 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-zinc-800 pb-4 gap-4">
           <div>
             <h1 className="text-base font-semibold tracking-wider uppercase text-zinc-100">
               SISTEM SUMMARY AKUNTANSI TRANSAKSI KELUARGA
             </h1>
             <p className="text-zinc-500 text-[11px] mt-0.5">Penjurnalan otomatis klasifikasi debet dan kredit keuangan mandiri.</p>
           </div>
-          <button
-            onClick={handleAddNewClick}
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium px-3 py-1.5 rounded border border-zinc-700 flex items-center gap-1.5 shadow-md text-xs transition-all duration-150"
-          >
-            <Plus className="w-3.5 h-3.5 text-emerald-500" /> Jurnal Transaksi Baru
-          </button>
+
+          {/* Bagian Kontrol: Filter Date & Tambah Transaksi */}
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-start md:justify-end">
+            {/* 1 & 2. Element Input Filter Date (Bulan) */}
+            <div className="flex items-center gap-2 bg-[#1a1a1a] border border-zinc-700 rounded px-2.5 py-1.5 min-w-[180px]">
+              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setCurrentPagePemasukan(1); // reset page sewaktu ganti bulan
+                  setCurrentPagePengeluaran(1);
+                }}
+                className="bg-transparent text-xs text-white focus:outline-none scheme-dark font-mono cursor-pointer w-full"
+              />
+            </div>
+
+            <button
+              onClick={handleAddNewClick}
+              className="bg-zinc-200 hover:bg-white text-zinc-900 font-medium px-3 py-1.5 rounded flex items-center gap-1.5 shadow-md text-xs transition-all duration-150"
+            >
+              <Plus className="w-3.5 h-3.5 text-emerald-600 font-bold" /> Jurnal Transaksi Baru
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -400,7 +414,6 @@ export default function KeluargaFormPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              {/* Input Tanggal */}
               <div>
                 <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1 flex items-center gap-1">
                   <Calendar className="w-3 h-3 text-zinc-500" /> Tanggal Valuta (Value Date)
@@ -414,7 +427,6 @@ export default function KeluargaFormPage() {
                 />
               </div>
 
-              {/* Input Kategori Dropdown Referensi Dinamis */}
               <div>
                 <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1">
                   Alokasi Akun Rekening (Ref: Master Plan)
@@ -439,7 +451,6 @@ export default function KeluargaFormPage() {
                 </select>
               </div>
 
-              {/* Input Jumlah */}
               <div>
                 <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1">
                   Jumlah Nominal Mutasi (IDR)
@@ -454,7 +465,6 @@ export default function KeluargaFormPage() {
                 />
               </div>
 
-              {/* Input Keterangan */}
               <div>
                 <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1">
                   Keterangan Deskripsi / Memo Jurnal
@@ -468,7 +478,6 @@ export default function KeluargaFormPage() {
                 />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800 mt-4">
                 <button
                   type="button"
