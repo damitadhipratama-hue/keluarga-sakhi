@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trash2, Edit2, Plus, Save, X, Calendar, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { Trash2, Edit2, Plus, Save, X, Calendar, ArrowDownCircle, ArrowUpCircle, Copy } from "lucide-react";
 
 // Mapping Daftar Kategori untuk Dropdown
 const LIST_KATEGORI = [
@@ -148,6 +148,59 @@ export default function MasterPlanPage() {
       }
     } catch (error) {
       console.error("Gagal menyimpan data:", error);
+    }
+  };
+
+  // Handler: Clone Plan dari Bulan Sebelumnya
+  const handleClonePreviousMonth = async () => {
+    if (!confirm(`Apakah Anda yakin ingin menyalin semua plan dari bulan sebelumnya ke bulan ${selectedMonth}?`)) return;
+    
+    setLoading(true);
+    try {
+      // 1. Hitung string bulan sebelumnya (YYYY-MM)
+      const [year, month] = selectedMonth.split("-");
+      const prevDate = new Date(parseInt(year), parseInt(month) - 2, 1);
+      const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
+
+      // 2. Ambil semua data master plan
+      const resMaster = await fetch("/api/keluarga_master");
+      const dataMaster = await resMaster.json();
+      const listMaster: MasterPlan[] = dataMaster.success ? dataMaster.data : [];
+
+      // 3. Filter data yang hanya ada di bulan sebelumnya
+      const prevMonthPlans = listMaster.filter((plan) => plan.date_plan.startsWith(prevMonthStr));
+
+      if (prevMonthPlans.length === 0) {
+        alert(`Tidak ada data plan di bulan ${prevMonthStr} untuk disalin.`);
+        setLoading(false);
+        return;
+      }
+
+      // 4. Lakukan POST untuk setiap plan ke bulan yang dipilih (selectedMonth)
+      const clonePromises = prevMonthPlans.map((plan) => {
+        // Pertahankan tanggal (hari), tapi ubah tahun dan bulannya ke selectedMonth
+        const oldDay = plan.date_plan.split("-")[2] || "01";
+        const newDatePlan = `${selectedMonth}-${oldDay}`;
+
+        return fetch("/api/keluarga_master", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date_plan: newDatePlan,
+            category: plan.category,
+            target: Number(plan.target),
+            actual: 0,
+          }),
+        });
+      });
+
+      await Promise.all(clonePromises);
+      alert("Berhasil menyalin plan dari bulan sebelumnya!");
+      fetchData(); // Refresh data agar tabel terupdate
+    } catch (error) {
+      console.error("Gagal menyalin data:", error);
+      alert("Terjadi kesalahan saat menyalin data.");
+      setLoading(false);
     }
   };
 
@@ -453,10 +506,21 @@ export default function MasterPlanPage() {
             
             {/* 1. TABEL PENGELUARAN (SEKARANG DI ATAS) */}
             <div className="bg-[#1e1e1e] border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
-              <div className="p-6 border-b border-gray-800 flex items-center gap-2">
-                <ArrowDownCircle className="w-5 h-5 text-red-500" />
-                <h2 className="text-lg font-semibold">Daftar Pengeluaran Periode {selectedMonth}</h2>
+              <div className="p-6 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <ArrowDownCircle className="w-5 h-5 text-red-500" />
+                  <h2 className="text-lg font-semibold">Daftar Pengeluaran Periode {selectedMonth}</h2>
+                </div>
+                
+                {/* Tombol Clone Plan */}
+                <button
+                  onClick={handleClonePreviousMonth}
+                  className="flex items-center justify-center gap-2 bg-[#262626] hover:bg-gray-700 text-gray-300 text-xs font-medium px-4 py-2 rounded-lg transition-colors border border-gray-700"
+                >
+                  <Copy className="w-4 h-4 text-emerald-500" /> Clone Plan Bulan Lalu
+                </button>
               </div>
+              
               {pengeluaranPlans.length === 0 ? (
                 <div className="p-10 text-center text-gray-500">Belum ada plan anggaran pengeluaran di bulan ini.</div>
               ) : (

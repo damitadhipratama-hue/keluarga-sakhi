@@ -67,7 +67,6 @@ export default function KeluargaFormPage() {
         fetch("/api/keluarga_form").catch(() => null) 
       ]);
 
-      // Tambahkan pengecekan .ok untuk menghindari error parsing HTML ke JSON
       if (resClosebook && resClosebook.ok) {
         const resultClosebook = await resClosebook.json();
         if (resultClosebook.success) {
@@ -225,12 +224,12 @@ export default function KeluargaFormPage() {
   // --- LOGIKA KHUSUS REPORT POP-UP ---
   const formattedMonthName = new Date(selectedMonth + "-01").toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   
-  // Pemasukan: HANYA Gaji dan Dividen (Diambil dari api/keluarga_form)
+  // Pemasukan: HANYA Gaji dan Dividen
   const totalPemasukan = filteredFormDataByMonth
     .filter(item => ["gaji", "dividen"].includes((item.kategori || "").toLowerCase()))
     .reduce((sum, item) => sum + Number(item.jumlah || 0), 0);
 
-  // Pengeluaran: SEMUA KECUALI Gaji dan Dividen (Diambil dari api/keluarga_form)
+  // Pengeluaran: SEMUA KECUALI Gaji dan Dividen
   const totalPengeluaran = filteredFormDataByMonth
     .filter(item => !["gaji", "dividen"].includes((item.kategori || "").toLowerCase()))
     .reduce((sum, item) => sum + Number(item.jumlah || 0), 0);
@@ -238,7 +237,7 @@ export default function KeluargaFormPage() {
   // Net Difference: Total Pemasukan - Total Pengeluaran
   const netDifference = totalPemasukan - totalPengeluaran;
 
-  // Target Bulan Depan (Sum target master bulan depan, ignore Gaji & Dividen)
+  // Target Bulan Depan
   const nextDate = new Date(parseInt(year), parseInt(month), 1);
   const nextMonthStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
   
@@ -253,32 +252,32 @@ export default function KeluargaFormPage() {
     const displayedItems = items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return (
-      <div className="bg-[#1a1a1a] rounded-lg overflow-hidden border border-zinc-800 shadow-xl w-full">
-        <div className="p-4 border-b border-zinc-800 bg-[#1f1f1f] flex items-center justify-between">
+      <div className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm w-full">
+        <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ArrowDownCircle className="w-4 h-4 text-zinc-400" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+            <ArrowDownCircle className="w-4 h-4 text-gray-500" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-800">
               Buku Summary Jurnal Closebook
             </h2>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+            <span className="text-[10px] text-gray-500 font-mono hidden sm:inline">
               Records: {items.length} entri
             </span>
-            <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700 block md:hidden">
+            <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded border border-gray-200 block md:hidden">
               ← Geser untuk detail →
             </span>
           </div>
         </div>
 
-        <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800">
-          <table className="w-full min-w-[850px] border-collapse text-left text-xs text-zinc-300">
+        <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+          <table className="w-full min-w-[850px] border-collapse text-left text-xs text-gray-700">
             <thead>
-              <tr className="bg-[#151515] border-b border-zinc-800 text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[15%] text-center">Tanggal Dok.</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[18%] text-right">Nilai Nominal (IDR)</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[20%] text-left">Kategori</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[35%]">Keterangan / Memo</th>
+              <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                <th className="py-3 px-4 font-medium border-r border-gray-200 w-[15%] text-center">Tanggal Dok.</th>
+                <th className="py-3 px-4 font-medium border-r border-gray-200 w-[18%] text-right">Nilai Nominal (IDR)</th>
+                <th className="py-3 px-4 font-medium border-r border-gray-200 w-[20%] text-left">Kategori</th>
+                <th className="py-3 px-4 font-medium border-r border-gray-200 w-[35%]">Keterangan / Memo</th>
                 <th className="py-3 px-4 font-medium w-[12%] text-center">Aksi</th>
               </tr>
             </thead>
@@ -286,7 +285,7 @@ export default function KeluargaFormPage() {
             <tbody>
               {displayedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-xs text-zinc-500 bg-[#1a1a1a]">
+                  <td colSpan={5} className="py-8 text-center text-xs text-gray-500 bg-white">
                     Belum terdapat catatan transaksi posting closebook di bulan ini.
                   </td>
                 </tr>
@@ -294,31 +293,31 @@ export default function KeluargaFormPage() {
                 displayedItems.map((item, index) => (
                   <tr
                     key={item.id || index}
-                    className="border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors duration-150"
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150"
                   >
-                    <td className="py-2.5 px-4 font-mono text-center border-r border-zinc-800/30 whitespace-nowrap">
+                    <td className="py-2.5 px-4 font-mono text-center border-r border-gray-100 whitespace-nowrap text-gray-600">
                       {item.tanggal}
                     </td>
-                    <td className="py-2.5 px-4 font-mono font-medium text-right border-r border-zinc-800/30 whitespace-nowrap text-zinc-200">
+                    <td className="py-2.5 px-4 font-mono font-medium text-right border-r border-gray-100 whitespace-nowrap text-gray-900">
                       {formatRupiah(item.jumlah)}
                     </td>
-                    <td className="py-2.5 px-4 text-zinc-400 font-medium border-r border-zinc-800/30 truncate max-w-[150px] text-left">
+                    <td className="py-2.5 px-4 text-gray-600 font-medium border-r border-gray-100 truncate max-w-[150px] text-left">
                       {item.kategori.toUpperCase()}
                     </td>
-                    <td className="py-2.5 px-4 text-zinc-300 border-r border-zinc-800/30 truncate max-w-[220px]" title={item.keterangan}>
+                    <td className="py-2.5 px-4 text-gray-600 border-r border-gray-100 truncate max-w-[220px]" title={item.keterangan}>
                       {item.keterangan || "-"}
                     </td>
                     <td className="py-2.5 px-4 text-center whitespace-nowrap">
                       <div className="inline-flex gap-1">
                         <button
                           onClick={() => handleEditClick(item)}
-                          className="bg-zinc-800 hover:bg-zinc-700 text-sky-400 px-2 py-0.5 rounded border border-zinc-700 transition-colors text-[11px]"
+                          className="bg-gray-100 hover:bg-gray-200 text-sky-600 px-2 py-0.5 rounded border border-gray-200 transition-colors text-[11px]"
                         >
                           Ubah
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="bg-zinc-800 hover:bg-rose-950/30 text-rose-400 px-2 py-0.5 rounded border border-zinc-700 hover:border-rose-900/40 transition-colors text-[11px]"
+                          className="bg-gray-100 hover:bg-rose-100 text-rose-600 px-2 py-0.5 rounded border border-gray-200 hover:border-rose-200 transition-colors text-[11px]"
                         >
                           Hapus
                         </button>
@@ -331,48 +330,48 @@ export default function KeluargaFormPage() {
 
             {/* UI Pembeda untuk Footer */}
             {items.length > 0 && (
-              <tfoot className="bg-[#1c1c1e] border-t-2 border-zinc-700 shadow-[inset_0_4px_6px_-4px_rgba(0,0,0,0.5)]">
-                <tr className="font-bold text-zinc-200 border-b border-zinc-800/50">
-                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30 text-zinc-300">
+              <tfoot className="bg-gray-50 border-t-2 border-gray-300 shadow-[inset_0_4px_6px_-4px_rgba(0,0,0,0.05)]">
+                <tr className="font-bold text-gray-800 border-b border-gray-200">
+                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-gray-200 text-gray-600">
                     Total Kumulatif
                   </td>
-                  <td className="py-3 px-4 font-mono text-sm text-right border-r border-zinc-800/30 text-white">
+                  <td className="py-3 px-4 font-mono text-sm text-right border-r border-gray-200 text-gray-900">
                     {formatRupiah(totalJumlah)}
                   </td>
-                  <td colSpan={3} className="py-3 px-4 text-[10px] text-zinc-500 font-normal italic">
+                  <td colSpan={3} className="py-3 px-4 text-[10px] text-gray-500 font-normal italic">
                     (Bulan Terpilih)
                   </td>
                 </tr>
-                <tr className="font-bold text-zinc-200 border-b border-zinc-800/50">
-                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30 text-zinc-300">
+                <tr className="font-bold text-gray-800 border-b border-gray-200">
+                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-gray-200 text-gray-600">
                     Total Real
                   </td>
-                  <td className="py-3 px-4 font-mono text-sm text-right border-r border-zinc-800/30 text-emerald-400">
+                  <td className="py-3 px-4 font-mono text-sm text-right border-r border-gray-200 text-emerald-600">
                     {formatRupiah(totalReal)}
                   </td>
-                  <td colSpan={3} className="py-3 px-4 text-[10px] text-zinc-500 font-normal italic">
+                  <td colSpan={3} className="py-3 px-4 text-[10px] text-gray-500 font-normal italic">
                     (Kumulatif - Menghutangi)
                   </td>
                 </tr>
-                <tr className="font-bold text-zinc-200 border-b border-zinc-800/50">
-                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30 text-zinc-300">
+                <tr className="font-bold text-gray-800 border-b border-gray-200">
+                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-gray-200 text-gray-600">
                     Total Onhand
                   </td>
-                  <td className="py-3 px-4 font-mono text-sm text-right border-r border-zinc-800/30 text-sky-400">
+                  <td className="py-3 px-4 font-mono text-sm text-right border-r border-gray-200 text-sky-600">
                     {formatRupiah(totalOnhand)}
                   </td>
-                  <td colSpan={3} className="py-3 px-4 text-[10px] text-zinc-500 font-normal italic">
+                  <td colSpan={3} className="py-3 px-4 text-[10px] text-gray-500 font-normal italic">
                     (Kumulatif - Menghutangi, Saham Bibit, Teriot)
                   </td>
                 </tr>
-                <tr className="font-bold text-zinc-200">
-                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30 text-zinc-300">
+                <tr className="font-bold text-gray-800">
+                  <td className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-gray-200 text-gray-600">
                     Persentase
                   </td>
-                  <td className={`py-3 px-4 font-mono text-sm text-right border-r border-zinc-800/30 ${persentase >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <td className={`py-3 px-4 font-mono text-sm text-right border-r border-gray-200 ${persentase >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {persentaseText}
                   </td>
-                  <td colSpan={3} className="py-3 px-4 text-[10px] text-zinc-500 font-normal italic">
+                  <td colSpan={3} className="py-3 px-4 text-[10px] text-gray-500 font-normal italic">
                     (Pertumbuhan dari Bulan Sebelumnya)
                   </td>
                 </tr>
@@ -382,8 +381,8 @@ export default function KeluargaFormPage() {
         </div>
 
         {items.length > ITEMS_PER_PAGE && (
-          <div className="p-3 bg-[#151515] border-t border-zinc-800 flex items-center justify-between gap-4">
-            <span className="text-[11px] text-zinc-500 font-mono">
+          <div className="p-3 bg-white border-t border-gray-200 flex items-center justify-between gap-4">
+            <span className="text-[11px] text-gray-500 font-mono">
               Menampilkan {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, items.length)} dari {items.length} entri
             </span>
             
@@ -392,7 +391,7 @@ export default function KeluargaFormPage() {
                 type="button"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className="p-1 text-zinc-400 bg-zinc-800 rounded border border-zinc-700 hover:bg-zinc-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                className="p-1 text-gray-500 bg-white rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -404,8 +403,8 @@ export default function KeluargaFormPage() {
                   onClick={() => setCurrentPage(pageNumber)}
                   className={`px-2.5 py-0.5 text-[11px] font-mono font-medium rounded border transition-all ${
                     currentPage === pageNumber
-                      ? "bg-zinc-200 text-zinc-900 border-zinc-200"
-                      : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 hover:text-zinc-200"
+                      ? "bg-gray-900 text-white border-gray-900"
+                      : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
                   {pageNumber}
@@ -416,7 +415,7 @@ export default function KeluargaFormPage() {
                 type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className="p-1 text-zinc-400 bg-zinc-800 rounded border border-zinc-700 hover:bg-zinc-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                className="p-1 text-gray-500 bg-white rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -429,7 +428,7 @@ export default function KeluargaFormPage() {
 
   return (
     <>
-      {/* CSS Khusus untuk Print PDF (1 Lembar Pop-Up Style) */}
+      {/* CSS Khusus untuk Print PDF (1 Lembar Pop-Up Style - Light Theme) */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page {
@@ -437,7 +436,7 @@ export default function KeluargaFormPage() {
             margin: 0;
           }
           body {
-            background-color: #141416 !important;
+            background-color: #f9fafb !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             margin: 0;
@@ -458,7 +457,7 @@ export default function KeluargaFormPage() {
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-            background-color: #141416 !important;
+            background-color: #f9fafb !important;
             margin: 0;
             padding: 0;
             z-index: 9999;
@@ -466,11 +465,12 @@ export default function KeluargaFormPage() {
           #printable-report {
             width: 100% !important;
             max-width: 420px !important;
-            border: 1px solid #27272a !important;
+            border: 1px solid #e5e7eb !important;
             border-radius: 24px !important;
             box-shadow: none !important;
-            background-color: #141416 !important;
+            background-color: #ffffff !important;
             padding: 24px !important;
+            color: #1f2937 !important;
           }
           .no-print {
             display: none !important;
@@ -478,19 +478,19 @@ export default function KeluargaFormPage() {
         }
       `}} />
 
-      <div className="min-h-screen bg-[#111111] text-[#e2e2e2] p-4 font-sans w-full antialiased">
+      <div className="min-h-screen bg-gray-50 text-gray-800 p-4 font-sans w-full antialiased">
         <div className="w-full space-y-6 max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-zinc-800 pb-4 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 pb-4 gap-4">
             <div>
-              <h1 className="text-base font-semibold tracking-wider uppercase text-zinc-100">
+              <h1 className="text-base font-semibold tracking-wider uppercase text-gray-900">
                 SISTEM FORM CLOSEBOOK AKUNTANSI KELUARGA
               </h1>
-              <p className="text-zinc-500 text-[11px] mt-0.5">Pencatatan total penutupan saldo berkala akun instrumen finansial.</p>
+              <p className="text-gray-500 text-[11px] mt-0.5">Pencatatan total penutupan saldo berkala akun instrumen finansial.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-start md:justify-end">
-              <div className="flex items-center gap-2 bg-[#1a1a1a] border border-zinc-700 rounded px-2.5 py-1.5 min-w-[180px]">
-                <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+              <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-2.5 py-1.5 min-w-[180px] shadow-sm">
+                <Calendar className="w-3.5 h-3.5 text-gray-500" />
                 <input
                   type="month"
                   value={selectedMonth}
@@ -498,21 +498,21 @@ export default function KeluargaFormPage() {
                     setSelectedMonth(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="bg-transparent text-xs text-white focus:outline-none scheme-dark font-mono cursor-pointer w-full"
+                  className="bg-transparent text-xs text-gray-900 focus:outline-none scheme-light font-mono cursor-pointer w-full"
                 />
               </div>
 
               <button
                 onClick={handleAddNewClick}
-                className="bg-zinc-200 hover:bg-white text-zinc-900 font-medium px-3 py-1.5 rounded flex items-center gap-1.5 shadow-md text-xs transition-all duration-150"
+                className="bg-gray-900 hover:bg-gray-800 text-white font-medium px-3 py-1.5 rounded flex items-center gap-1.5 shadow-md text-xs transition-all duration-150"
               >
-                <Plus className="w-3.5 h-3.5 text-emerald-600 font-bold" /> Jurnal Transaksi Baru
+                <Plus className="w-3.5 h-3.5 text-emerald-400 font-bold" /> Jurnal Transaksi Baru
               </button>
             </div>
           </div>
 
           {loading ? (
-            <div className="bg-[#1a1a1a] border border-zinc-800 rounded-lg p-12 text-center text-xs text-zinc-500 animate-pulse w-full">
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center text-xs text-gray-500 animate-pulse w-full shadow-sm">
               Sinkronisasi ledger neraca database...
             </div>
           ) : (
@@ -523,7 +523,7 @@ export default function KeluargaFormPage() {
               <div className="flex justify-end pt-2">
                 <button
                   onClick={() => setIsReportModalOpen(true)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg text-xs tracking-wider uppercase transition-all duration-200"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-md text-xs tracking-wider uppercase transition-all duration-200"
                 >
                   <FileText className="w-4 h-4" /> Generate Report Bulan {formattedMonthName}
                 </button>
@@ -534,10 +534,10 @@ export default function KeluargaFormPage() {
 
         {/* Modal Form Input */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-[2px] p-4">
-            <div className="bg-[#1a1a1a] border border-zinc-800 w-full max-w-sm rounded-lg p-5 shadow-2xl text-xs">
-              <div className="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-[2px] p-4">
+            <div className="bg-white border border-gray-200 w-full max-w-sm rounded-lg p-5 shadow-2xl text-xs">
+              <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-900">
                   {editingId ? "Koreksi Pos Jurnal (Edit)" : "Entri Jurnal Pos Baru"}
                 </h2>
                 <button
@@ -545,7 +545,7 @@ export default function KeluargaFormPage() {
                     setIsModalOpen(false);
                     setEditingId(null);
                   }}
-                  className="text-zinc-500 hover:text-zinc-300 transition-colors text-lg font-normal"
+                  className="text-gray-400 hover:text-gray-600 transition-colors text-lg font-normal"
                 >
                   &times;
                 </button>
@@ -553,30 +553,30 @@ export default function KeluargaFormPage() {
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-zinc-500" /> Tanggal Valuta (Value Date)
+                  <label className="block text-[10px] font-medium text-gray-600 uppercase mb-1 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-gray-500" /> Tanggal Valuta (Value Date)
                   </label>
                   <input
                     type="date"
                     required
                     value={tanggal}
                     onChange={(e) => setTanggal(e.target.value)}
-                    className="w-full bg-[#222222] border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500 scheme-dark font-mono"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 scheme-light font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1">
+                  <label className="block text-[10px] font-medium text-gray-600 uppercase mb-1">
                     Alokasi Akun Rekening
                   </label>
                   <select
                     value={kategori}
                     required
                     onChange={(e) => setKategori(e.target.value)}
-                    className="w-full bg-[#222222] border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500 cursor-pointer"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 cursor-pointer"
                   >
                     {MASTER_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat} className="bg-[#222222]">
+                      <option key={cat} value={cat}>
                         {cat.toUpperCase()}
                       </option>
                     ))}
@@ -584,7 +584,7 @@ export default function KeluargaFormPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1">
+                  <label className="block text-[10px] font-medium text-gray-600 uppercase mb-1">
                     Jumlah Nominal Mutasi (IDR)
                   </label>
                   <input
@@ -593,36 +593,36 @@ export default function KeluargaFormPage() {
                     placeholder="0"
                     value={jumlah}
                     onChange={(e) => setJumlah(e.target.value)}
-                    className="w-full bg-[#222222] border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500 font-mono"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-medium text-zinc-400 uppercase mb-1">
+                  <label className="block text-[10px] font-medium text-gray-600 uppercase mb-1">
                     Keterangan Deskripsi / Memo Jurnal
                   </label>
                   <textarea
                     value={keterangan}
                     onChange={(e) => setKeterangan(e.target.value)}
                     rows={2}
-                    className="w-full bg-[#222222] border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500 resize-none"
+                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-500 resize-none"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800 mt-4">
+                <div className="flex justify-end gap-2 pt-2 border-t border-gray-200 mt-4">
                   <button
                     type="button"
                     onClick={() => {
                       setIsModalOpen(false);
                       setEditingId(null);
                     }}
-                    className="px-3 py-1.5 text-[11px] font-medium bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 text-zinc-300 transition-colors"
+                    className="px-3 py-1.5 text-[11px] font-medium bg-white hover:bg-gray-50 rounded border border-gray-300 text-gray-700 transition-colors"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="px-3 py-1.5 text-[11px] font-medium bg-zinc-200 hover:bg-white text-zinc-900 rounded transition-colors"
+                    className="px-3 py-1.5 text-[11px] font-medium bg-gray-900 hover:bg-gray-800 text-white rounded transition-colors"
                   >
                     {editingId ? "Posting Koreksi" : "Posting Jurnal"}
                   </button>
@@ -634,58 +634,58 @@ export default function KeluargaFormPage() {
 
         {/* Pop-up Modal Detailed Analytics */}
         {isReportModalOpen && (
-          <div id="printable-report-container" className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-[2px] p-4">
-            <div id="printable-report" className="bg-[#141416] border border-zinc-800/80 w-full max-w-md rounded-3xl p-6 shadow-2xl text-xs text-zinc-300 relative overflow-hidden">
+          <div id="printable-report-container" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-[2px] p-4">
+            <div id="printable-report" className="bg-white border border-gray-200 w-full max-w-md rounded-3xl p-6 shadow-2xl text-xs text-gray-600 relative overflow-hidden">
               
               {/* Header Modal */}
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-white tracking-wide">{formattedMonthName}</h2>
-                  <p className="text-[10px] font-bold tracking-widest uppercase text-rose-500 mt-0.5">
+                  <h2 className="text-xl font-bold text-gray-900 tracking-wide">{formattedMonthName}</h2>
+                  <p className="text-[10px] font-bold tracking-widest uppercase text-rose-600 mt-0.5">
                     Detailed Analytics
                   </p>
                 </div>
                 <button
                   onClick={() => setIsReportModalOpen(false)}
-                  className="no-print text-zinc-500 hover:text-zinc-300 bg-zinc-900 hover:bg-zinc-800 p-2 rounded-full transition-colors w-8 h-8 flex items-center justify-center"
+                  className="no-print text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors w-8 h-8 flex items-center justify-center"
                 >
                   <span className="text-lg font-light leading-none">&times;</span>
                 </button>
               </div>
 
               {/* Container Utama (Inner Card) */}
-              <div className="bg-[#1c1c1e] border border-zinc-850 rounded-2xl p-5 space-y-5">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-5">
                 
                 {/* Row Net Difference */}
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+                    <p className="text-[9px] font-bold tracking-wider text-gray-500 uppercase">
                       Net Difference (Selisih)
                     </p>
-                    <p className={`text-xl font-bold mt-1 font-mono ${netDifference >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <p className={`text-xl font-bold mt-1 font-mono ${netDifference >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {formatRupiah(netDifference)}
                     </p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${persentase >= 0 ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/40' : 'bg-rose-950/30 text-rose-400 border-rose-900/40'}`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${persentase >= 0 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
                     {persentaseText}
                   </span>
                 </div>
 
                 {/* Grid Pemasukan & Pengeluaran */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#151517] border border-zinc-800/40 rounded-xl p-3">
-                    <p className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+                  <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3">
+                    <p className="text-[9px] font-bold tracking-wider text-gray-500 uppercase">
                       Total Pemasukan
                     </p>
-                    <p className="text-xs font-bold text-emerald-400 mt-1 font-mono">
+                    <p className="text-xs font-bold text-emerald-600 mt-1 font-mono">
                       {formatRupiah(totalPemasukan)}
                     </p>
                   </div>
-                  <div className="bg-[#151517] border border-zinc-800/40 rounded-xl p-3">
-                    <p className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+                  <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-3">
+                    <p className="text-[9px] font-bold tracking-wider text-gray-500 uppercase">
                       Total Pengeluaran
                     </p>
-                    <p className="text-xs font-bold text-rose-400 mt-1 font-mono">
+                    <p className="text-xs font-bold text-rose-600 mt-1 font-mono">
                       {formatRupiah(totalPengeluaran)}
                     </p>
                   </div>
@@ -693,45 +693,45 @@ export default function KeluargaFormPage() {
 
                 {/* Breakdown List Akun */}
                 <div className="space-y-3 pt-2 text-[11px]">
-                  <div className="flex justify-between items-center text-zinc-400 italic">
+                  <div className="flex justify-between items-center text-gray-500 italic">
                     <span>Total Kumulatif</span>
-                    <span className="font-mono font-bold text-zinc-200">{formatRupiah(totalJumlah)}</span>
+                    <span className="font-mono font-bold text-gray-900">{formatRupiah(totalJumlah)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-zinc-400 italic">
+                  <div className="flex justify-between items-center text-gray-500 italic">
                     <span>Total Real</span>
-                    <span className="font-mono font-bold text-zinc-200">{formatRupiah(totalReal)}</span>
+                    <span className="font-mono font-bold text-gray-900">{formatRupiah(totalReal)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-zinc-400 italic">
+                  <div className="flex justify-between items-center text-gray-500 italic">
                     <span>Total Onhand</span>
-                    <span className="font-mono font-bold text-zinc-200">{formatRupiah(totalOnhand)}</span>
+                    <span className="font-mono font-bold text-gray-900">{formatRupiah(totalOnhand)}</span>
                   </div>
                 </div>
 
-                <hr className="border-zinc-800/60" />
+                <hr className="border-gray-200" />
 
                 {/* Kekayaan Total (Sama dengan Kumulatif) */}
                 <div className="flex justify-between items-center font-bold">
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-400">
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500">
                     Kekayaan Total
                   </span>
-                  <span className="text-sm text-emerald-400 font-mono">
+                  <span className="text-sm text-emerald-600 font-mono">
                     {formatRupiah(totalJumlah)}
                   </span>
                 </div>
 
                 {/* Card Rencana Pengeluaran Bulan Depan */}
-                <div className="bg-white rounded-xl p-3.5 shadow-sm text-zinc-900">
-                  <p className="text-[9px] font-bold tracking-wider text-zinc-400 uppercase">
+                <div className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200 text-gray-900">
+                  <p className="text-[9px] font-bold tracking-wider text-gray-500 uppercase">
                     Rencana Pengeluaran Bulan Depan
                   </p>
-                  <p className="text-sm font-bold mt-1 font-mono text-zinc-900">
+                  <p className="text-sm font-bold mt-1 font-mono text-gray-900">
                     {formatRupiah(targetNextMonth)}
                   </p>
                 </div>
 
                 {/* Growth Label */}
                 <div className="text-center pt-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${persentase >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${persentase >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     Persentase: {persentaseText}
                   </span>
                 </div>
@@ -743,14 +743,14 @@ export default function KeluargaFormPage() {
                 <button
                   type="button"
                   onClick={handleDownloadPDF}
-                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold tracking-wider uppercase py-3 rounded-xl shadow-md text-[11px] transition-all duration-150 text-center"
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold tracking-wider uppercase py-3 rounded-xl shadow-md text-[11px] transition-all duration-150 text-center"
                 >
                   Download PDF
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsReportModalOpen(false)}
-                  className="bg-[#f4f4f5] hover:bg-white text-zinc-900 font-bold tracking-wider uppercase py-3 rounded-xl transition-all duration-150 text-center"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold tracking-wider uppercase py-3 rounded-xl transition-all duration-150 text-center"
                 >
                   Close Analysis
                 </button>
