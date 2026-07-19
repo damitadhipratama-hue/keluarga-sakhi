@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowDownCircle, ArrowUpCircle, Calendar, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  ArrowDownCircle, 
+  ArrowUpCircle, 
+  Calendar, 
+  Plus, 
+  ChevronLeft, 
+  ChevronRight, 
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Filter
+} from "lucide-react";
 
 interface FormSummaryItem {
   id?: number;
@@ -31,6 +43,18 @@ export default function KeluargaFormPage() {
     const today = new Date();
     return today.toISOString().substring(0, 7); // Hasil: "YYYY-MM"
   });
+
+  // State Filter Kategori Dropdown untuk masing-masing jurnal
+  const [selectedCategoryPengeluaran, setSelectedCategoryPengeluaran] = useState<string>("");
+  const [selectedCategoryPemasukan, setSelectedCategoryPemasukan] = useState<string>("");
+
+  // State General Search untuk masing-masing jurnal
+  const [searchPengeluaran, setSearchPengeluaran] = useState<string>("");
+  const [searchPemasukan, setSearchPemasukan] = useState<string>("");
+
+  // State Manajemen Sorting (Berdasarkan Tanggal / Jumlah nilai mutasi)
+  const [sortPengeluaran, setSortPengeluaran] = useState<{ key: "tanggal" | "jumlah" | null; direction: "asc" | "desc" }>({ key: null, direction: "desc" });
+  const [sortPemasukan, setSortPemasukan] = useState<{ key: "tanggal" | "jumlah" | null; direction: "asc" | "desc" }>({ key: null, direction: "desc" });
 
   // State Manajemen Pagination (Limit 20 baris per halaman)
   const ITEMS_PER_PAGE = 20;
@@ -92,6 +116,12 @@ export default function KeluargaFormPage() {
   useEffect(() => {
     fetchMasterCategories(tanggal);
   }, [tanggal]);
+
+  // Reset filter kategori jika bulan global berubah
+  useEffect(() => {
+    setSelectedCategoryPemasukan("");
+    setSelectedCategoryPengeluaran("");
+  }, [selectedMonth]);
 
   const handleAddNewClick = () => {
     const today = new Date().toISOString().split("T")[0];
@@ -173,25 +203,97 @@ export default function KeluargaFormPage() {
     }).format(num);
   };
 
+  const handleSort = (type: "pemasukan" | "pengeluaran", key: "tanggal" | "jumlah") => {
+    const isPemasukan = type === "pemasukan";
+    const currentSort = isPemasukan ? sortPemasukan : sortPengeluaran;
+    const setSort = isPemasukan ? setSortPemasukan : setSortPengeluaran;
+
+    if (currentSort.key === key) {
+      setSort({ key, direction: currentSort.direction === "asc" ? "desc" : "asc" });
+    } else {
+      setSort({ key, direction: "desc" });
+    }
+  };
+
+  const applySorting = (items: FormSummaryItem[], config: { key: "tanggal" | "jumlah" | null; direction: "asc" | "desc" }) => {
+    if (!config.key) return items;
+
+    return [...items].sort((a, b) => {
+      if (config.key === "tanggal") {
+        const dateA = new Date(a.tanggal).getTime();
+        const dateB = new Date(b.tanggal).getTime();
+        return config.direction === "asc" ? dateA - dateB : dateB - dateA;
+      }
+      if (config.key === "jumlah") {
+        return config.direction === "asc" ? a.jumlah - b.jumlah : b.jumlah - a.jumlah;
+      }
+      return 0;
+    });
+  };
+
   // 3. Filter data berdasarkan Bulan yang dipilih (Selected Date Filter)
   const filteredDataByMonth = data.filter((item) => item.tanggal.startsWith(selectedMonth));
 
-  const dataPemasukan = filteredDataByMonth
+  // Pemisahan awal & sorting default berbasis timestamp
+  const rawPemasukan = filteredDataByMonth
     .filter((item) => ["gaji", "dividen"].includes(item.kategori.toLowerCase()))
     .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
-  const dataPengeluaran = filteredDataByMonth
+  const rawPengeluaran = filteredDataByMonth
     .filter((item) => !["gaji", "dividen"].includes(item.kategori.toLowerCase()))
     .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+
+  // Mendapatkan daftar kategori unik untuk opsi filter dropdown berdasarkan data bulan ini
+  const uniqueCategoriesPemasukan = Array.from(new Set(rawPemasukan.map(item => item.kategori)));
+  const uniqueCategoriesPengeluaran = Array.from(new Set(rawPengeluaran.map(item => item.kategori)));
+
+  // Filter tambahan untuk General Search (Kategori & Keterangan)
+  const searchFilteredPemasukan = rawPemasukan.filter((item) => {
+    const searchLower = searchPemasukan.toLowerCase();
+    return (
+      item.kategori.toLowerCase().includes(searchLower) ||
+      item.keterangan.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const searchFilteredPengeluaran = rawPengeluaran.filter((item) => {
+    const searchLower = searchPengeluaran.toLowerCase();
+    return (
+      item.kategori.toLowerCase().includes(searchLower) ||
+      item.keterangan.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Filter tambahan berdasarkan Dropdown Kategori Terpilih
+  const categoryFilteredPemasukan = searchFilteredPemasukan.filter((item) => {
+    if (!selectedCategoryPemasukan) return true;
+    return item.kategori === selectedCategoryPemasukan;
+  });
+
+  const categoryFilteredPengeluaran = searchFilteredPengeluaran.filter((item) => {
+    if (!selectedCategoryPengeluaran) return true;
+    return item.kategori === selectedCategoryPengeluaran;
+  });
+
+  // Integrasi Eksekusi Kriteria Pengurutan Kolom Aktif
+  const dataPemasukan = applySorting(categoryFilteredPemasukan, sortPemasukan);
+  const dataPengeluaran = applySorting(categoryFilteredPengeluaran, sortPengeluaran);
 
   const renderTable = (items: FormSummaryItem[], type: "pemasukan" | "pengeluaran") => {
     const isPemasukan = type === "pemasukan";
     
-    // Jumlah kumulasi otomatis menyesuaikan item yang sudah difilter berdasarkan bulan terpilih
     const totalJumlah = items.reduce((sum, item) => sum + Number(item.jumlah || 0), 0);
     
     const currentPage = isPemasukan ? currentPagePemasukan : currentPagePengeluaran;
     const setCurrentPage = isPemasukan ? setCurrentPagePemasukan : setCurrentPagePengeluaran;
+    const searchValue = isPemasukan ? searchPemasukan : searchPengeluaran;
+    const setSearchValue = isPemasukan ? setSearchPemasukan : setSearchPengeluaran;
+    
+    const selectedCategory = isPemasukan ? selectedCategoryPemasukan : selectedCategoryPengeluaran;
+    const setSelectedCategory = isPemasukan ? setSelectedCategoryPemasukan : setSelectedCategoryPengeluaran;
+    const listUniqueCategories = isPemasukan ? uniqueCategoriesPemasukan : uniqueCategoriesPengeluaran;
+
+    const currentSort = isPemasukan ? sortPemasukan : sortPengeluaran;
     
     const totalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -199,18 +301,65 @@ export default function KeluargaFormPage() {
 
     return (
       <div className="bg-[#1a1a1a] rounded-lg overflow-hidden border border-zinc-800 shadow-xl w-full">
-        <div className="p-4 border-b border-zinc-800 bg-[#1f1f1f] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {isPemasukan ? (
-              <ArrowUpCircle className="w-4 h-4 text-emerald-500" />
-            ) : (
-              <ArrowDownCircle className="w-4 h-4 text-rose-500" />
-            )}
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
-              {isPemasukan ? "Buku Jurnal Pemasukan" : "Buku Jurnal Pengeluaran"}
-            </h2>
+        <div className="p-4 border-b border-zinc-800 bg-[#1f1f1f] flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+            <div className="flex items-center gap-2">
+              {isPemasukan ? (
+                <ArrowUpCircle className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <ArrowDownCircle className="w-4 h-4 text-rose-500" />
+              )}
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 whitespace-nowrap">
+                {isPemasukan ? "Buku Jurnal Pemasukan" : "Buku Jurnal Pengeluaran"}
+              </h2>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2 flex-1 max-w-xl">
+              {/* Input General Search */}
+              <div className="relative flex-1 min-w-[180px] max-w-xs">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+                  <Search className="h-3.5 w-3.5 text-zinc-500" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Cari kategori / keterangan..."
+                  value={searchValue}
+                  onChange={(e) => {
+                    setSearchValue(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-[#151515] text-zinc-200 placeholder-zinc-600 text-xs rounded border border-zinc-800 pl-8 pr-2.5 py-1.5 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all"
+                />
+              </div>
+
+              {/* Filter Dropdown Kategori */}
+              <div className="relative min-w-[150px]">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+                  <Filter className="h-3.5 w-3.5 text-zinc-500" />
+                </span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setCurrentPage(1); // reset ke halaman 1 saat filter diubah
+                  }}
+                  className="w-full bg-[#151515] text-zinc-200 text-xs rounded border border-zinc-800 pl-8 pr-6 py-1.5 focus:outline-none focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="">Semua Kategori</option>
+                  {listUniqueCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-zinc-500">
+                  ▼
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          
+          <div className="flex items-center gap-3 self-end lg:self-auto">
             <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
               Records: {items.length} entri
             </span>
@@ -223,11 +372,35 @@ export default function KeluargaFormPage() {
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800">
           <table className="w-full min-w-[850px] border-collapse text-left text-xs text-zinc-300">
             <thead>
-              <tr className="bg-[#151515] border-b border-zinc-800 text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[15%] text-center">Tanggal Dok.</th>
+              <tr className="bg-[#151515] border-b border-zinc-800 text-[11px] font-medium uppercase tracking-wider text-zinc-400 select-none">
+                <th 
+                  onClick={() => handleSort(type, "tanggal")}
+                  className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[15%] text-center cursor-pointer hover:bg-zinc-800/60 hover:text-white transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    Tanggal Dok.
+                    {currentSort.key === "tanggal" ? (
+                      currentSort.direction === "asc" ? <ArrowUp className="w-3 h-3 text-sky-400" /> : <ArrowDown className="w-3 h-3 text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-zinc-600" />
+                    )}
+                  </div>
+                </th>
                 <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[20%] text-right">Kategori</th>
                 <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[35%]">Keterangan / Memo</th>
-                <th className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[18%] text-right">Nilai Nominal (IDR)</th>
+                <th 
+                  onClick={() => handleSort(type, "jumlah")}
+                  className="py-3 px-4 font-medium border-r border-zinc-800/30 w-[18%] text-right cursor-pointer hover:bg-zinc-800/60 hover:text-white transition-colors"
+                >
+                  <div className="flex items-center justify-end gap-1.5">
+                    Nilai Nominal (IDR)
+                    {currentSort.key === "jumlah" ? (
+                      currentSort.direction === "asc" ? <ArrowUp className="w-3 h-3 text-sky-400" /> : <ArrowDown className="w-3 h-3 text-sky-400" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-zinc-600" />
+                    )}
+                  </div>
+                </th>
                 <th className="py-3 px-4 font-medium w-[12%] text-center">Aksi</th>
               </tr>
             </thead>
@@ -236,7 +409,7 @@ export default function KeluargaFormPage() {
               {displayedItems.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-xs text-zinc-500 bg-[#1a1a1a]">
-                    Belum terdapat catatan transaksi posting pada pos {type} di bulan ini.
+                    Tidak ditemukan catatan transaksi posting yang cocok pada pos {type}.
                   </td>
                 </tr>
               ) : (
@@ -282,7 +455,7 @@ export default function KeluargaFormPage() {
               <tfoot>
                 <tr className="bg-[#151515] font-bold text-zinc-200 border-t border-zinc-800">
                   <td colSpan={3} className="py-3 px-4 text-left tracking-wide text-[11px] uppercase border-r border-zinc-800/30">
-                    Total Saldo Buku Pos {type} (Bulan Terpilih)
+                    Total Saldo Buku Pos {type} (Bulan Terpilih &amp; Filter)
                   </td>
                   <td className={`py-3 px-4 font-mono text-sm text-right border-r border-zinc-800/30 ${isPemasukan ? "text-emerald-500" : "text-rose-500"}`}>
                     {formatRupiah(totalJumlah)}
@@ -353,9 +526,7 @@ export default function KeluargaFormPage() {
             <p className="text-zinc-500 text-[11px] mt-0.5">Penjurnalan otomatis klasifikasi debet dan kredit keuangan mandiri.</p>
           </div>
 
-          {/* Bagian Kontrol: Filter Date & Tambah Transaksi */}
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-start md:justify-end">
-            {/* 1 & 2. Element Input Filter Date (Bulan) */}
             <div className="flex items-center gap-2 bg-[#1a1a1a] border border-zinc-700 rounded px-2.5 py-1.5 min-w-[180px]">
               <Calendar className="w-3.5 h-3.5 text-zinc-400" />
               <input
@@ -363,7 +534,7 @@ export default function KeluargaFormPage() {
                 value={selectedMonth}
                 onChange={(e) => {
                   setSelectedMonth(e.target.value);
-                  setCurrentPagePemasukan(1); // reset page sewaktu ganti bulan
+                  setCurrentPagePemasukan(1);
                   setCurrentPagePengeluaran(1);
                 }}
                 className="bg-transparent text-xs text-white focus:outline-none scheme-dark font-mono cursor-pointer w-full"
@@ -385,10 +556,7 @@ export default function KeluargaFormPage() {
           </div>
         ) : (
           <div className="space-y-6 w-full">
-            {/* Tabel Pengeluaran berada di Atas */}
             {renderTable(dataPengeluaran, "pengeluaran")}
-
-            {/* Tabel Pemasukan berada di Bawah */}
             {renderTable(dataPemasukan, "pemasukan")}
           </div>
         )}
